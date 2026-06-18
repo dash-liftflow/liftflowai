@@ -479,7 +479,7 @@ footer{background:var(--lb);padding:64px 0;}
           <span class="line3">We build it.</span>
         </h1>
         <div class="hero-sub">
-          <p>Most HVAC and plumbing owners lose 20–30% of their leads after hours — not because their business isn't good, but because no one's there to answer. We build a simple AI system that runs quietly in the background, captures every inquiry, and responds instantly — 24/7. Done for you in 7 days. No tech skills, no $250K+ revenue minimum, every price on this page.</p>
+          <p>One HVAC client went from responding to 40% of their leads to 100% — without hiring anyone. We build a simple AI system that captures every inquiry and responds instantly, 24/7, so no lead falls through after hours. Done for you in 7 days. No tech skills, no $250K+ revenue minimum, every price on this page.</p>
           <div class="hero-ctas">
             <a href="#contact" class="btn btn-ds">Book a Free Strategy Call →</a>
             <a href="#demo" class="btn btn-dg">Watch a Real Build</a>
@@ -1012,5 +1012,162 @@ function resetDemo(){clearTimeout(demoTimer);step=0;body.innerHTML='';setTimeout
 if(restartBtn)restartBtn.addEventListener('click',resetDemo);
 resetDemo();
 </script>
+
+<!-- ===== LIFTFLOW AI LIVE CHAT WIDGET ===== -->
+<!-- LIFTFLOW AI CHAT WIDGET — lead notifications via ntfy.sh (no account needed) -->
+<!-- To receive notifications: visit https://ntfy.sh/liftflowai-leads-7x9k2m in your browser and click Subscribe -->
+<!-- Or install the ntfy app (iOS/Android) and subscribe to topic: liftflowai-leads-7x9k2m -->
+<script>
+(function(){
+  var NTFY_TOPIC = 'https://ntfy.sh/liftflowai-leads-7x9k2m';
+
+  var lfc = { open:false, greeted:false, step:0, data:{businessType:'',pain:'',volume:'',name:'',contact:''} };
+
+  var css = `
+    #lfc-bubble{position:fixed;bottom:28px;right:28px;z-index:9999;width:56px;height:56px;border-radius:50%;background:#0F1128;border:1px solid #BCC5F5;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 24px rgba(0,0,0,.5);transition:transform .2s,box-shadow .2s;}
+    #lfc-bubble:hover{transform:scale(1.06);box-shadow:0 6px 32px rgba(0,0,0,.6);}
+    #lfc-badge{position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;background:#4ade80;border:2px solid #0E0C09;animation:lfc-pulse 2s infinite;}
+    @keyframes lfc-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.25);opacity:.7}}
+    #lfc-window{position:fixed;bottom:96px;right:28px;z-index:9998;width:360px;max-height:540px;background:#0E0C09;border:1px solid #2E2A26;border-radius:12px;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.7);transform:scale(.92) translateY(16px);opacity:0;pointer-events:none;transition:all .22s cubic-bezier(.34,1.56,.64,1);font-family:'DM Sans',system-ui,sans-serif;}
+    #lfc-window.lfc-open{transform:scale(1) translateY(0);opacity:1;pointer-events:all;}
+    #lfc-header{padding:14px 16px 12px;background:#161310;border-bottom:1px solid #2E2A26;border-radius:12px 12px 0 0;display:flex;align-items:center;gap:10px;}
+    #lfc-avatar{width:34px;height:34px;border-radius:50%;background:#0F1128;border:1px solid #BCC5F5;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+    #lfc-hinfo{flex:1;}
+    #lfc-hname{font-size:14px;font-weight:600;color:#E8E4DC;}
+    #lfc-hstatus{font-size:11px;color:#8A8478;display:flex;align-items:center;gap:5px;margin-top:2px;}
+    #lfc-hstatus::before{content:'';width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0;}
+    #lfc-close{background:none;border:none;color:#46423E;cursor:pointer;padding:4px;font-size:17px;line-height:1;transition:color .15s;}
+    #lfc-close:hover{color:#E8E4DC;}
+    #lfc-msgs{flex:1;overflow-y:auto;padding:16px 13px 6px;display:flex;flex-direction:column;gap:9px;scroll-behavior:smooth;}
+    #lfc-msgs::-webkit-scrollbar{width:3px;}
+    #lfc-msgs::-webkit-scrollbar-thumb{background:#2E2A26;border-radius:2px;}
+    .lfc-m{max-width:83%;font-size:13.5px;line-height:1.6;}
+    .lfc-m.bot{align-self:flex-start;}
+    .lfc-m.usr{align-self:flex-end;}
+    .lfc-bb{background:#1E1B17;border:1px solid #2E2A26;color:#E8E4DC;padding:9px 12px;border-radius:4px 11px 11px 11px;}
+    .lfc-bu{background:#0F1128;border:1px solid #BCC5F5;color:#E3E8FF;padding:9px 12px;border-radius:11px 4px 11px 11px;}
+    .lfc-typing{align-self:flex-start;display:flex;gap:4px;padding:11px 13px;background:#1E1B17;border:1px solid #2E2A26;border-radius:4px 11px 11px 11px;}
+    .lfc-dot{width:5px;height:5px;border-radius:50%;background:#8A8478;animation:lfc-bounce 1.2s infinite;}
+    .lfc-dot:nth-child(2){animation-delay:.2s;}
+    .lfc-dot:nth-child(3){animation-delay:.4s;}
+    @keyframes lfc-bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+    #lfc-reps{padding:7px 12px 4px;display:flex;flex-wrap:wrap;gap:6px;}
+    .lfc-rep{font-family:'DM Sans',system-ui,sans-serif;font-size:12.5px;font-weight:500;color:#E8E4DC;background:transparent;border:1px solid #3E3A36;padding:6px 12px;border-radius:100px;cursor:pointer;transition:border-color .15s,background .15s;}
+    .lfc-rep:hover{border-color:#BCC5F5;background:rgba(188,197,245,.07);color:#E3E8FF;}
+    #lfc-irow{padding:8px 12px 12px;display:flex;gap:8px;align-items:center;border-top:1px solid #1E1B17;}
+    #lfc-inp{flex:1;background:#161310;border:1px solid #2E2A26;color:#E8E4DC;font-family:'DM Sans',system-ui,sans-serif;font-size:13.5px;padding:8px 11px;border-radius:8px;outline:none;transition:border-color .15s;}
+    #lfc-inp::placeholder{color:#46423E;}
+    #lfc-inp:focus{border-color:#BCC5F5;}
+    #lfc-snd{width:34px;height:34px;border-radius:8px;flex-shrink:0;background:#0F1128;border:1px solid #BCC5F5;color:#E3E8FF;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+    #lfc-snd:hover{background:#1a1e3a;}
+    #lfc-foot{padding:7px 12px 9px;text-align:center;font-size:10.5px;color:#2E2A26;border-top:1px solid #161310;letter-spacing:.03em;}
+    #lfc-foot a{color:#2E2A26;text-decoration:none;transition:color .15s;}
+    #lfc-foot a:hover{color:#46423E;}
+    @media(max-width:420px){#lfc-window{width:calc(100vw - 24px);right:12px;}#lfc-bubble{right:14px;bottom:14px;}}
+  `;
+
+  var s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
+
+  var wrap = document.createElement('div');
+  wrap.innerHTML = `
+    <div id="lfc-bubble">
+      <div id="lfc-badge"></div>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E3E8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </div>
+    <div id="lfc-window">
+      <div id="lfc-header">
+        <div id="lfc-avatar">🤖</div>
+        <div id="lfc-hinfo">
+          <div id="lfc-hname">Liftflow AI</div>
+          <div id="lfc-hstatus">Online now</div>
+        </div>
+        <button id="lfc-close" aria-label="Close">✕</button>
+      </div>
+      <div id="lfc-msgs"></div>
+      <div id="lfc-reps"></div>
+      <div id="lfc-irow" style="display:none">
+        <input id="lfc-inp" type="text" autocomplete="off" placeholder="Type here…"/>
+        <button id="lfc-snd" aria-label="Send">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div id="lfc-foot">Powered by <a href="https://www.liftflowai.com" target="_blank">Liftflow AI</a></div>
+    </div>`;
+  document.body.appendChild(wrap);
+
+  var bubble  = document.getElementById('lfc-bubble');
+  var win     = document.getElementById('lfc-window');
+  var msgs    = document.getElementById('lfc-msgs');
+  var reps    = document.getElementById('lfc-reps');
+  var irow    = document.getElementById('lfc-irow');
+  var inp     = document.getElementById('lfc-inp');
+  var snd     = document.getElementById('lfc-snd');
+  var cls     = document.getElementById('lfc-close');
+  var badge   = document.getElementById('lfc-badge');
+
+  var FLOW = [
+    { bot:"Hi there 👋 I'm Liftflow's AI — the same system we build for clients. What type of service business do you run?", opts:['HVAC / Plumbing','Roofing','Landscaping','Cleaning','Other'] },
+    { bot:function(){ return "Got it — "+lfc.data.businessType+". What's your biggest challenge right now?"; }, opts:['Missing after-hours leads','Manual follow-up','Booking chaos','All of the above'] },
+    { bot:"About how many new leads come in per week?", opts:['Under 10','10–30','30+'] },
+    { bot:function(){ var p = lfc.data.volume==='30+' ? 'Growth Suite ($997)' : 'Starter Lead Capture Bot ($497)'; return "Based on that, the "+p+" is probably your best fit. Want Dash to put together a free custom demo for your "+lfc.data.businessType.toLowerCase()+" business?"; }, opts:["Yes, let's do it","Maybe later"] }
+  ];
+
+  function scroll(){ msgs.scrollTop = msgs.scrollHeight; }
+  function addBot(t){ var d=document.createElement('div'); d.className='lfc-m bot'; d.innerHTML='<div class="lfc-bb">'+t+'</div>'; msgs.appendChild(d); scroll(); }
+  function addUsr(t){ var d=document.createElement('div'); d.className='lfc-m usr'; d.innerHTML='<div class="lfc-bu">'+t+'</div>'; msgs.appendChild(d); scroll(); }
+  function showTyping(){ var d=document.createElement('div'); d.className='lfc-typing'; d.id='lfc-typ'; d.innerHTML='<div class="lfc-dot"></div><div class="lfc-dot"></div><div class="lfc-dot"></div>'; msgs.appendChild(d); scroll(); }
+  function hideTyping(){ var t=document.getElementById('lfc-typ'); if(t)t.remove(); }
+  function showOpts(o){ reps.innerHTML=''; o.forEach(function(x){ var b=document.createElement('button'); b.className='lfc-rep'; b.textContent=x; b.onclick=function(){ pick(x); }; reps.appendChild(b); }); }
+  function clearOpts(){ reps.innerHTML=''; }
+  function showInp(ph){ clearOpts(); irow.style.display='flex'; inp.placeholder=ph||'Type here…'; inp.value=''; setTimeout(function(){ inp.focus(); },80); }
+  function hideInp(){ irow.style.display='none'; }
+  function say(t,delay,cb){ delay=delay||700; setTimeout(function(){ showTyping(); setTimeout(function(){ hideTyping(); addBot(t); if(cb)cb(); },850); },delay); }
+
+  function pick(choice){
+    clearOpts(); addUsr(choice);
+    if(lfc.step===0){ lfc.data.businessType=choice; next(); }
+    else if(lfc.step===1){ lfc.data.pain=choice; next(); }
+    else if(lfc.step===2){ lfc.data.volume=choice; next(); }
+    else if(lfc.step===3){
+      if(choice==="Maybe later"){ say("No problem — you can always <a href='#contact' style='color:#BCC5F5'>book a call</a> or email dash@liftflowai.com anytime. 👋",500); }
+      else { lfc.step++; say("Great! What's your name?",500,function(){ showInp("Your name…"); }); }
+    }
+  }
+
+  function next(){ var f=FLOW[lfc.step]; lfc.step++; var t=typeof f.bot==='function'?f.bot():f.bot; say(t,450,function(){ showOpts(f.opts); }); }
+
+  function submit(){
+    var v=inp.value.trim(); if(!v)return;
+    hideInp(); addUsr(v);
+    if(lfc.step===4){ lfc.data.name=v; lfc.step++; say("Nice to meet you, "+v+"! What's the best email or number to reach you?",600,function(){ showInp("Email or phone…"); }); }
+    else if(lfc.step===5){
+      lfc.data.contact=v; lfc.step++;
+      saveLead();
+      say("You're all set, "+lfc.data.name+"! 🚀 Dash will reach out within 24 hours with a demo built for your "+lfc.data.businessType.toLowerCase()+" business — you'll see exactly what we'd build before committing to anything.",600,function(){
+        setTimeout(function(){ addBot('<a href="#services" onclick="document.getElementById(\'lfc-window\').classList.remove(\'lfc-open\')" style="color:#BCC5F5;font-size:13px;">View pricing while you wait →</a>'); },500);
+      });
+    }
+  }
+
+  function saveLead(){
+    var p={ businessType:lfc.data.businessType, pain:lfc.data.pain, volume:lfc.data.volume, name:lfc.data.name, contact:lfc.data.contact, source:'Website Chat Widget', ts:new Date().toISOString() };
+    try{ var a=JSON.parse(localStorage.getItem('lfc_leads')||'[]'); a.push(p); localStorage.setItem('lfc_leads',JSON.stringify(a)); }catch(e){}
+    var msg = '🔥 New Lead — Liftflow AI\n\nName: '+p.name+'\nContact: '+p.contact+'\nBusiness: '+p.businessType+'\nPain: '+p.pain+'\nVolume: '+p.volume+'/wk\nTime: '+new Date().toLocaleString();
+    fetch(NTFY_TOPIC,{ method:'POST', headers:{'Title':'New Lead: '+p.name+' ('+p.businessType+')','Priority':'high','Tags':'fire,phone'}, body:msg }).catch(function(){});
+  }
+
+  function open(){ lfc.open=true; win.classList.add('lfc-open'); badge.style.display='none'; if(!lfc.greeted){ lfc.greeted=true; say(FLOW[0].bot,500,function(){ showOpts(FLOW[0].opts); }); } }
+  function close(){ lfc.open=false; win.classList.remove('lfc-open'); }
+
+  bubble.addEventListener('click',function(){ lfc.open?close():open(); });
+  cls.addEventListener('click',close);
+  snd.addEventListener('click',submit);
+  inp.addEventListener('keydown',function(e){ if(e.key==='Enter')submit(); });
+
+  // Subtle pulse after 10s if not yet opened
+  if(!sessionStorage.getItem('lfc_seen')){ setTimeout(function(){ sessionStorage.setItem('lfc_seen','1'); if(!lfc.open){ badge.style.animation='lfc-pulse .5s ease 4'; } },10000); }
+})();
+</script>
+<!-- ===== END LIFTFLOW AI CHAT WIDGET ===== -->
 </body>
 </html>
