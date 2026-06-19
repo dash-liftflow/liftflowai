@@ -1164,8 +1164,26 @@ resetDemo();
   snd.addEventListener('click',submit);
   inp.addEventListener('keydown',function(e){ if(e.key==='Enter')submit(); });
 
-  // Subtle pulse after 10s if not yet opened
-  if(!sessionStorage.getItem('lfc_seen')){ setTimeout(function(){ sessionStorage.setItem('lfc_seen','1'); if(!lfc.open){ badge.style.animation='lfc-pulse .5s ease 4'; } },10000); }
+  // Peek message near bubble (shows after 2s, disappears after 6s)
+  var peek = document.createElement('div');
+  peek.id = 'lfc-peek';
+  peek.textContent = '👋 Missing leads? Ask me how to fix it.';
+  peek.style.cssText = 'position:fixed;bottom:96px;right:28px;z-index:9997;background:#0F1128;border:1px solid #BCC5F5;color:#E3E8FF;font-family:"DM Sans",system-ui,sans-serif;font-size:13px;font-weight:500;padding:9px 14px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.5);cursor:pointer;opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s;white-space:nowrap;';
+  document.body.appendChild(peek);
+  peek.addEventListener('click', function(){ peek.style.opacity='0'; open(); });
+
+  if(!sessionStorage.getItem('lfc_seen')){
+    // Show peek message after 2s
+    setTimeout(function(){
+      peek.style.opacity='1'; peek.style.transform='translateY(0)';
+      // Auto-hide peek after 6s
+      setTimeout(function(){ peek.style.opacity='0'; peek.style.transform='translateY(8px)'; }, 6000);
+    }, 2000);
+    // Auto-open chat after 8s if not already opened
+    setTimeout(function(){
+      if(!lfc.open){ sessionStorage.setItem('lfc_seen','1'); open(); }
+    }, 8000);
+  }
 })();
 </script>
 <!-- ===== END LIFTFLOW AI CHAT WIDGET ===== -->
